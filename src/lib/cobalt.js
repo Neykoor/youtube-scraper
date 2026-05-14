@@ -2,6 +2,15 @@ import axios from 'axios'
 
 export async function cobalt(url, audio = true) {
   try {
+    let title = 'Desconocido'
+    let thumbnail = ''
+    
+    try {
+      const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`
+      const { data: oembedData } = await axios.get(oembedUrl)
+      title = oembedData.title
+      thumbnail = oembedData.thumbnail_url
+    } catch (e) {}
 
     const { data } = await axios.post(
       'https://api.cobalt.tools/api/json',
@@ -19,11 +28,14 @@ export async function cobalt(url, audio = true) {
       }
     )
 
-    if (data.status !== 'stream')
-      throw 'Error al obtener media'
+    if (data.status !== 'stream' && data.status !== 'redirect') {
+      throw new Error('Error al obtener media')
+    }
 
     return {
       status: true,
+      title,
+      thumbnail,
       result: data
     }
 
